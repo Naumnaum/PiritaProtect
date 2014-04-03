@@ -1,21 +1,6 @@
 # default config.yml
 
-AutoUpdate: true
-
-ConfigVersion: A-1.8 #Do not change this, it allows for your config to be updated to the latest one
-
-# Anti-Spam
-
-LimitLogins: 5 #Players will be kicked if they join twice within a space of this amount of seconds
-CapsPercentage: 70 #If a players chat contains more then this percentage of capitals it will be changed to lower case
-MaxWordLength: 15 #If a player types a word longer then this (for example 'asdgasdgasgaga') it will be blocked
-LetterDragging: 3 #If a players chat contains more then this many letters in a row that are the same it will be blocked
-CensorLimit: 70 #If more then this percentage of a message is censored it is blocked
-ChatSpam: 1 #Limit between the time a player can chat again
-
-BannedWords: #Any words in this list will be blocked
-   #- Bitch
-   #- Bastard
+AutoUpdate: false
 
 # Protection
 
@@ -26,10 +11,10 @@ ProtectChests: true #If a player places a chest and has no protections, a new on
 # Land
 
 BuyableLand: true
-StartLand: 100 # Width X Length ( 10 x 10 ) (Must be a square number)
+StartLand: 500 # Width X Length ( 10 x 10 ) (Must be a square number)
 
-LandGain: 20 #The amount you gain
-LandDelay: 1200 #The delay between each gain of land
+LandGain: 175 #The amount you gain
+LandDelay: 600 #The delay between each gain of land
 SendMessage: true #Sends a message when they gain land
 
 # Items
@@ -62,12 +47,12 @@ FireSpread: false
 
 # Players
 
-PlayersTrampleCrops: true
+PlayersTrampleCrops: false
 
 PlayersCanCreatePortals: true
 
-PreventPVPLog: true
-PreventPVPTeleport: true
+PreventPVPLog: false
+PreventPVPTeleport: false
 
 # Entity
 
@@ -83,7 +68,7 @@ CreeperDamageEntity: true
 CreeperBlockDamage: false
 
 GhastDamageEntity: true
-GhastBlockDamage: true
+GhastBlockDamage: false
 
 WitherDamageEntity: true
 WitherBlockDamage: false
@@ -97,4 +82,4 @@ EnderCrystalBlockDamage: false
 EndermenBlockChange: false
 
 EnderDragonBlockDamage: false
-ZombiesBreakDoors: true
+ZombiesBreakDoors: false

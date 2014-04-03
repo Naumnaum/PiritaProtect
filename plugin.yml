@@ -1,6 +1,6 @@
 name: BukkitProtect
 main: io.github.elitejynx.BukkitProtect.BukkitProtect
-version: A-1.8
+version: B-1.7
 description: BukkitProtect, protecting your worlds since it was made!
 authors: [EliteJynx]
 permissions:
@@ -69,7 +69,13 @@ commands:
   AddUsers:
     description: Add a player to the selected protection
     usage: /<command> [player] [type]
+  AddAmigo:
+    description: Add a player to the selected protection
+    usage: /<command> [player] [type]
   RemoveUsers:
+    description: Remove a player from the selected protection
+    usage: /<command> [player] [type]
+  DelAmigo:
     description: Remove a player from the selected protection
     usage: /<command> [player] [type]
   GetUsers:

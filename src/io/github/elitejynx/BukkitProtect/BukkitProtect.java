@@ -1,12 +1,5 @@
 package io.github.elitejynx.BukkitProtect;
 
-import io.github.elitejynx.BukkitProtect.Commands.CommandHandler;
-import io.github.elitejynx.BukkitProtect.Commands.TabHandler;
-import io.github.elitejynx.BukkitProtect.Protections.ProtectionZone;
-import io.github.elitejynx.BukkitProtect.Protections.Region;
-import io.github.elitejynx.BukkitProtect.Protections.Tag;
-import io.github.elitejynx.BukkitProtect.Protections.UserType;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -18,15 +11,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.command.PluginCommand;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Monster;
@@ -70,6 +64,7 @@ import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.event.world.WorldSaveEvent;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -81,14 +76,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * @author EliteJynx
+ * @modded by Naumnaum and re4397
  */
 @SuppressWarnings("deprecation")
 public class BukkitProtect extends JavaPlugin implements Listener {
 	// The class handling PVP
 	public static TimerHandlers PVP;
 	public static BukkitProtect Plugin;
-	public static CommandHandler Cmds;
-	public static TabHandler Tabs;
 	// Files
 	public String ProtectionPath;
 	public String LandPath;
@@ -98,22 +92,31 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 	public ArrayList<Tag> Tags = new ArrayList<Tag>();
 	public ArrayList<UserType> Types = new ArrayList<UserType>();
 
-	public UserType UTAccess = new UserType("Access",
-			"Allows the use of blocks to access the area",
+	//modificado por Naumnaum
+	public UserType UTAccess = new UserType("Portas",
+			" - Permite o jogador abrir portas, botoes, placas de pressao.",
 			Material.STAINED_CLAY, 8, Material.STAINED_CLAY, 0, 1, false);
-	public UserType UTEntities = new UserType("Entities",
-			"Allows the use of entities", Material.STAINED_CLAY, 7,
+	//modificado por Naumnaum
+	public UserType UTEntities = new UserType("Entidades",
+			" - Permite o jogador usar ENTIDADES como ANIMAIS, carrinhos.", Material.STAINED_CLAY, 7,
 			Material.STAINED_CLAY, 12, 2, false);
-	public UserType UTBuildBlocks = new UserType("BuildBlocks",
-			"Allows the building of blocks", Material.STAINED_CLAY, 13,
+	//modificado por Naumnaum
+	public UserType UTBuildBlocks = new UserType("Construir",
+			" - Permite o jogador colocar e quebrar blocos do terreno, mas nao permite quebrar nem acessar blocos que abram inventario, como baús, fornos, etc.", Material.STAINED_CLAY, 13,
 			Material.STAINED_CLAY, 5, 3, false);
-	public UserType UTUseBlocks = new UserType("UseBlocks",
-			"Allows the use of blocks", Material.STAINED_CLAY, 11,
+	//modificado por Naumnaum
+	public UserType UTUseBlocks = new UserType("Total",
+			" - Da permissao para colocar ou tirar todos blocos, acessar todos objetos.", Material.STAINED_CLAY, 11,
 			Material.STAINED_CLAY, 3, 3, false);
-	public UserType UTModerator = new UserType("Moderator",
-			"Allows the use of commands", Material.STAINED_CLAY, 1,
+	//modificado por Naumnaum
+	public UserType UTModerator = new UserType("Moderador",
+			" - Permite o jogador a usar comandos de DONO do terreno em seu terreno!", Material.STAINED_CLAY, 1,
 			Material.STAINED_CLAY, 4, 5, true);
-
+	//Adicionado por Naumnaum
+	public UserType UTInv = new UserType("Baus",
+			" - Permite usar inventarios como BAUS, fornos, etc...", Material.STAINED_GLASS, 11,
+			Material.STAINED_GLASS, 3, 3, false);
+	
 	public ArrayList<Material> RodTypes = new ArrayList<Material>();
 
 	public ItemStack RodA;
@@ -124,7 +127,7 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 		ItemMeta RodMeta = Rod.getItemMeta();
 		RodMeta.setDisplayName(Name);
 		ArrayList<String> Lore = new ArrayList<String>();
-		Lore.add("Protect your land");
+		Lore.add("Protege terrenos");
 		Lore.add(MaxUses + " / " + MaxUses);
 		RodMeta.setLore(Lore);
 		Rod.setItemMeta(RodMeta);
@@ -154,7 +157,7 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 	}
 
 	public void addTag(String name, String desc, String... Values) {
-		Tag tag = new Tag(name, desc);
+		Tag tag = new Tag(name.toLowerCase(), desc.toLowerCase());
 		for (String value : Values) {
 			tag.addValues(value.toLowerCase());
 		}
@@ -165,24 +168,15 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 		Types.add(Type);
 	}
 
-	public void addCommad(String Label, String Permission) {
-		PluginCommand cmd = getCommand(Label);
-		cmd.setExecutor(Cmds);
-		cmd.setPermission(Permission);
-		cmd.setPermissionMessage(ChatColor.DARK_RED + "You don't have "
-				+ cmd.getPermission());
-		cmd.setTabCompleter(Tabs);
-	}
-
 	@Override
 	public void onEnable() {
 		Plugin = this;
 		this.saveDefaultConfig();
-		addTag("PVP", "Prevent PVP", "true", "false");
-		addTag("Fire", "Prevent fire spread", "true", "false");
-		addTag("Ice", "Prevent ice melting or forming", "true", "false");
-		addTag("Snow", "Prevent snow melting or forming", "true", "false");
-		addTag("EntitySpawn", "Prevent entities spawning", "true", "false");
+		addTag("PVPOff", "Previne PVP", "true", "false");
+		addTag("Fire", "Previne fogo espalhar", "true", "false");
+		addTag("Ice", "Previne gelo derreter ou formar", "true", "false");
+		addTag("Snow", "Previne neve derreter ou formar", "true", "false");
+		addTag("EntitySpawn", "Previne mobs nascerem", "true", "false");
 		addTag("ServerOwned",
 				"Prevents this protection from being counted in the owners land blocks",
 				"true");
@@ -191,6 +185,8 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 		addUserType(UTBuildBlocks);
 		addUserType(UTUseBlocks);
 		addUserType(UTModerator);
+		//adcionado por Naumnaum
+		addUserType(UTInv);
 		ProtectionPath = getDataFolder() + File.separator + "Protections.yml";
 		File FileP = new File(ProtectionPath);
 		LandPath = getDataFolder() + File.separator + "Land.yml";
@@ -227,27 +223,6 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 		getServer().getPluginManager().registerEvents(PVP, this);
 		new UpdateHandler(this, 68440, this.getFile(),
 				UpdateHandler.UpdateType.DEFAULT, true);
-		Cmds = new CommandHandler(this);
-		Tabs = new TabHandler(this);
-
-		this.addCommad("GiveRod", "BukkitProtect.Commands.GiveRod");
-		this.addCommad("AddUsers", "BukkitProtect.Commands.Users");
-		this.addCommad("RemoveUsers", "BukkitProtect.Commands.Users");
-		this.addCommad("GetUsers", "BukkitProtect.Commands.Users");
-		this.addCommad("SetOwner", "BukkitProtect.Protections.EditOthers");
-		this.addCommad("Transfer", "BukkitProtect.Commands.Transfer");
-		this.addCommad("Accept", "BukkitProtect.Commands.Accept");
-		this.addCommad("RemoveProtection",
-				"BukkitProtect.Commands.RemoveProtections");
-		this.addCommad("RemoveAllProtections",
-				"BukkitProtect.Commands.RemoveProtections");
-		this.addCommad("AddTag", "BukkitProtect.Commands.Tag");
-		this.addCommad("RemoveTag", "BukkitProtect.Commands.Tag");
-		this.addCommad("GetTags", "BukkitProtect.Commands.Tag");
-		this.addCommad("GiveLand", "BukkitProtect.Commands.AdminLand");
-		this.addCommad("SetLand", "BukkitProtect.Commands.AdminLand");
-		this.addCommad("GetLand", "BukkitProtect.Commands.GetLand");
-		this.addCommad("Stuck", "BukkitProtect.Commands.Stuck");
 	}
 
 	@Override
@@ -294,6 +269,813 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 		T result = (T) ois.readObject();
 		ois.close();
 		return result;
+	}
+
+	@Override
+	public boolean onCommand(CommandSender Sender, Command Cmd, String Label,
+			String[] Args) {
+		if (Cmd.getName().equalsIgnoreCase("giverod")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.GiveRod")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 1) {
+				Player Target = (Bukkit.getPlayer(Args[0]));
+				if (Target == null) {
+					Sender.sendMessage("Jogador nao encontrado ou nao esta online.");
+					return true;
+				}
+				Target.getInventory().addItem(RodA);
+				Target.sendMessage("Dado a " + Target.getDisplayName() + " a "
+						+ RodA.getItemMeta().getDisplayName());
+			} else if (Args.length > 1) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				((Player) Sender).getInventory().addItem(RodA);
+				Sender.sendMessage("Dado a "
+						+ ((Player) Sender).getDisplayName() + " a "
+						+ RodA.getItemMeta().getDisplayName());
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("setowner")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.EditOthers")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 1) {
+				Player Target = (Bukkit.getPlayer(Args[0]));
+				if (Target == null) {
+					Sender.sendMessage("Jogador nao encontrado ou nao esta online.");
+					return true;
+				}
+				if (PVP.PlayerSelectedZone.containsKey(Sender)) {
+					if (((ProtectionZone) PVP.PlayerSelectedZone.get(Sender)
+							.keySet().toArray()[0]).getOwner()
+							.equalsIgnoreCase(Sender.getName())
+							|| Sender
+									.hasPermission("BukkitProtect.Protection.EditOthers")) {
+						if (getConfig().getBoolean("BuyableLand")) {
+							if (LandOwned.containsKey(Target.getName())) {
+								if ((LandOwned.get(Target.getName()) - getTotalLandUsed(Target)) < ((ProtectionZone) PVP.PlayerSelectedZone
+										.get(Sender).keySet().toArray()[0])
+										.getCube().getSize()
+										&& !((ProtectionZone) PVP.PlayerSelectedZone
+												.get(Sender).keySet().toArray()[0])
+												.getTag("ServerOwned")
+												.equalsIgnoreCase("true")) {
+									Sender.sendMessage(Target.getName()
+											+ " precisa "
+											+ (((ProtectionZone) PVP.PlayerSelectedZone
+													.get(Sender).keySet()
+													.toArray()[0]).getCube()
+													.getSize() - (LandOwned
+													.get(Target.getName()) - getTotalLandUsed(Target)))
+											+ " mais blocos de protecao para proteger isto");
+									return true;
+								}
+							}
+						}
+						if (Protections
+								.containsKey(((ProtectionZone) PVP.PlayerSelectedZone
+										.get(Sender).keySet().toArray()[0])
+										.getOwner())) {
+							ProtectionZone Zone = ((ProtectionZone) PVP.PlayerSelectedZone
+									.get(Sender).keySet().toArray()[0]).Clone();
+							ArrayList<ProtectionZone> ZonesA = Protections
+									.get(((ProtectionZone) PVP.PlayerSelectedZone
+											.get(Sender).keySet().toArray()[0])
+											.getOwner());
+							ArrayList<ProtectionZone> ZonesB = Protections
+									.get(Target.getName());
+							if (ZonesB == null) {
+								ZonesB = new ArrayList<ProtectionZone>();
+							}
+							ZonesA.remove((PVP.PlayerSelectedZone.get(Sender)
+									.keySet().toArray()[0]));
+							Zone.setOwner(Target.getName());
+							ZonesB.add(Zone);
+							Protections.put(Sender.getName(), ZonesA);
+							Protections.put(Target.getName(), ZonesB);
+							Sender.sendMessage("Definido o proprietario da protecao a "
+									+ Target.getDisplayName());
+
+							Target.sendMessage("Voce recebeu a protecao de terreno de "
+									+ ((Player) Sender).getDisplayName());
+						}
+					}
+				} else {
+					Sender.sendMessage("Voce nao selecionou uma protecao ou nao tem permissao nesta, para selecionar clique com o graveto comum nela.");
+					return true;
+				}
+			} else if (Args.length > 1) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("accept")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.Accept")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 0) {
+				for (Player Plr : PVP.CommandTrades.keySet()) {
+					CommandRequest Request = PVP.CommandTrades.get(Plr);
+					if (Request.getTarget() == (Player) Sender) {
+						if (!Request.getAccepted()) {
+							Request.setAccepted(true);
+							onCommand(Request.getSender(),
+									Request.getCommand(), Request.getCommand()
+											.getName(), Request.getArgs());
+							Request.getSender().sendMessage(
+									"O comando foi aceito");
+							Request.getTarget().sendMessage(
+									"Voce aceitou o coamndo");
+							PVP.CommandTrades.put(Plr, Request);
+							return true;
+						}
+					}
+				}
+				Sender.sendMessage("You have no pending requests");
+				return true;
+			} else if (Args.length > 0) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				((Player) Sender).getInventory().addItem(RodA);
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("transfer")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.Transfer")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 1) {
+				Player Target = (Bukkit.getPlayer(Args[0]));
+				if (Target == null) {
+					Sender.sendMessage("Jogador nao encontrado ou nao esta online.");
+					return true;
+				}
+				if (Target == (Player) Sender) {
+					Sender.sendMessage("Nao pode transferir para voce mesmo");
+					return true;
+				}
+				if (PVP.PlayerSelectedZone.containsKey(Sender)) {
+					if (PVP.CommandTrades.containsKey(Sender)
+							&& PVP.CommandTrades.get(Sender).getTarget() == Target
+							&& PVP.CommandTrades.get(Sender).getAccepted()) {
+						if (((ProtectionZone) PVP.PlayerSelectedZone
+								.get(Sender).keySet().toArray()[0]).getOwner()
+								.equalsIgnoreCase(Sender.getName())
+								|| Sender
+										.hasPermission("BukkitProtect.Protection.EditOthers")) {
+							int Length = Math
+									.abs(((ProtectionZone) PVP.PlayerSelectedZone
+											.get(Sender).keySet().toArray()[0])
+											.getCube().getCorner1().getBlockX()
+											- ((ProtectionZone) PVP.PlayerSelectedZone
+													.get(Sender).keySet()
+													.toArray()[0]).getCube()
+													.getCorner2().getBlockX());
+							int Width = Math
+									.abs(((ProtectionZone) PVP.PlayerSelectedZone
+											.get(Sender).keySet().toArray()[0])
+											.getCube().getCorner1().getBlockZ()
+											- ((ProtectionZone) PVP.PlayerSelectedZone
+													.get(Sender).keySet()
+													.toArray()[0]).getCube()
+													.getCorner2().getBlockZ());
+							if (getConfig().getBoolean("BuyableLand")) {
+								if (LandOwned.containsKey(Target.getName())) {
+									if ((LandOwned.get(Target.getName()) - getTotalLandUsed(Target)) < (Length * Width)
+											&& !((ProtectionZone) PVP.PlayerSelectedZone
+													.get(Sender).keySet()
+													.toArray()[0]).getTag(
+													"ServerOwned")
+													.equalsIgnoreCase("true")) {
+										Sender.sendMessage(Target.getName()
+												+ " precisa "
+												+ ((Length * Width) - (LandOwned
+														.get(Target.getName()) - getTotalLandUsed(Target)))
+												+ " mais blocos de protecao para proteger isto");
+										return true;
+									}
+								}
+							}
+							if (Protections
+									.containsKey(((ProtectionZone) PVP.PlayerSelectedZone
+											.get(Sender).keySet().toArray()[0])
+											.getOwner())) {
+								ProtectionZone Zone = ((ProtectionZone) PVP.PlayerSelectedZone
+										.get(Sender).keySet().toArray()[0])
+										.Clone();
+								ArrayList<ProtectionZone> ZonesA = Protections
+										.get(((ProtectionZone) PVP.PlayerSelectedZone
+												.get(Sender).keySet().toArray()[0])
+												.getOwner());
+								ArrayList<ProtectionZone> ZonesB = Protections
+										.get(Target.getName());
+								if (ZonesB == null) {
+									ZonesB = new ArrayList<ProtectionZone>();
+								}
+								ZonesA.remove((PVP.PlayerSelectedZone
+										.get(Sender).keySet().toArray()[0]));
+								Zone.setOwner(Target.getName());
+								ZonesB.add(Zone);
+								Protections.put(Sender.getName(), ZonesA);
+								Protections.put(Target.getName(), ZonesB);
+								Sender.sendMessage("Transferirdo a protecao para "
+										+ Target.getDisplayName());
+								Target.sendMessage("Voce recebeu a protecao de terreno de "
+										+ ((Player) Sender).getDisplayName());
+							}
+						}
+					} else {
+						CommandRequest Trades = new CommandRequest(
+								(Player) Sender, Target, false, Cmd, Args);
+						PVP.CommandTrades.put((Player) Sender, Trades);
+						PVP.CommandTimers.put((Player) Sender, 10);
+						Sender.sendMessage("Esperando o jogador aceitar");
+						Target.sendMessage(Sender.getName()
+								+ " deseja dar-lhe a protecao, use /accept para aceitar ou esperae 10 segundos para nao aceitar");
+					}
+				} else {
+					Sender.sendMessage("Voce nao selecionou uma protecao, ou voce nao tem permissao nesta, para selecionar, clique direito com um graveto normal dentro de um terreno protegido");
+					return true;
+				}
+			} else if (Args.length > 1) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("addAmigo")
+				|| Cmd.getName().equalsIgnoreCase("addUsers")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.Users")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 2) {
+				String Target;
+				if (Args[0].equalsIgnoreCase("*")) {
+					Target = "*";
+				} else if (Bukkit.getPlayer(Args[0]) != null) {
+					Target = Bukkit.getPlayer(Args[0]).getName();
+				} else {
+					Sender.sendMessage("Jogador nao encontrado ou nao esta online.");
+					return true;
+				}
+				UserType UT = Util.parseUserType(Args[1]);
+
+				if (UT == null && !Args[1].equalsIgnoreCase("*")) {
+					for (UserType UType : Types) {
+						Sender.sendMessage(UType.getName() + " : "
+								+ UType.getDesc());
+					}
+					Sender.sendMessage("Isso nao eh um tipo valido");
+					return true;
+				}
+
+				if (PVP.PlayerSelectedZone.containsKey(Sender)) {
+					if (((ProtectionZone) PVP.PlayerSelectedZone.get(Sender)
+							.keySet().toArray()[0])
+							.userHasAdminType(((Player) Sender).getName())
+							|| Sender
+									.hasPermission("BukkitProtect.Protection.EditOthers")) {
+						if (((ProtectionZone) PVP.PlayerSelectedZone
+								.get(Sender).keySet().toArray()[0]).addUsers(
+								Target, UT)) {
+							Sender.sendMessage("Adicionado " + Target
+									+ " a permissao " + Args[1]);
+						} else {
+							Sender.sendMessage("Nao pode adicionar " + Target
+									+ " a permissao " + Args[1] + " ou, ele ja tem esta permissao!");
+						}
+					}
+				} else {
+					Sender.sendMessage("Voce nao selecionou uma protecao, ou voce nao tem permissao nesta, para selecionar, clique direito com um graveto normal dentro de um terreno protegido");
+					return true;
+				}
+			} else if (Args.length > 2) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("addtag")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.Tag")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 2) {
+				if (!Util.isTagAndValue(Args[0], Args[1])) {
+					for (Tag tag : Tags) {
+						Sender.sendMessage(tag.getName() + " : "
+								+ tag.getDesc() + " : "
+								+ tag.getValues().toString());
+					}
+					Sender.sendMessage("Isto nao eh um tag valida");
+					return true;
+				}
+				if (PVP.PlayerSelectedZone.containsKey(Sender)) {
+					if (((ProtectionZone) PVP.PlayerSelectedZone.get(Sender)
+							.keySet().toArray()[0])
+							.userHasAdminType(((Player) Sender).getName())
+							|| Sender
+									.hasPermission("BukkitProtect.Protection.EditOthers")) {
+						if (((ProtectionZone) PVP.PlayerSelectedZone
+								.get(Sender).keySet().toArray()[0]).setTags(
+								Args[0].toLowerCase(), Args[1].toLowerCase())) {
+							Sender.sendMessage("Adicionado a tag " + Args[0]
+									+ " a protecao");
+
+						} else {
+							Sender.sendMessage("Nao foi possivel adicionar a tag "
+									+ Args[0] + " a protecao");
+						}
+					}
+				} else {
+					Sender.sendMessage("Voce nao selecionou uma protecao, ou voce nao tem permissao nesta, para selecionar, clique direito com um graveto normal dentro de um terreno protegido");
+					return true;
+				}
+			} else if (Args.length > 2) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				for (Tag tag : Tags) {
+					Sender.sendMessage(tag.getName() + " : " + tag.getDesc()
+							+ " : " + tag.getValues().toString());
+				}
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("gettags")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.Tag")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 0) {
+				if (PVP.PlayerSelectedZone.containsKey(Sender)) {
+					if (((ProtectionZone) PVP.PlayerSelectedZone.get(Sender)
+							.keySet().toArray()[0])
+							.userHasAdminType(((Player) Sender).getName())
+							|| Sender
+									.hasPermission("BukkitProtect.Protection.EditOthers")) {
+						if (((ProtectionZone) PVP.PlayerSelectedZone
+								.get(Sender).keySet().toArray()[0]).getTags()
+								.isEmpty()) {
+							Sender.sendMessage("Esta protecao nao tem tags");
+						} else {
+							for (String Name : ((ProtectionZone) PVP.PlayerSelectedZone
+									.get(Sender).keySet().toArray()[0])
+									.getTags().keySet()) {
+								String Value = ((ProtectionZone) PVP.PlayerSelectedZone
+										.get(Sender).keySet().toArray()[0])
+										.getTags().get(Name);
+								Sender.sendMessage(Name + " : " + Value);
+							}
+						}
+					}
+				} else {
+					Sender.sendMessage("Voce nao selecionou uma protecao, ou voce nao tem permissao nesta, para selecionar, clique direito com um graveto normal dentro de um terreno protegido");
+					return true;
+				}
+			} else if (Args.length > 0) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("getusers")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.Users")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 0) {
+				if (PVP.PlayerSelectedZone.containsKey(Sender)) {
+					if (((ProtectionZone) PVP.PlayerSelectedZone.get(Sender)
+							.keySet().toArray()[0])
+							.userHasAdminType(((Player) Sender).getName())
+							|| Sender
+									.hasPermission("BukkitProtect.Protection.EditOthers")) {
+						if (((ProtectionZone) PVP.PlayerSelectedZone
+								.get(Sender).keySet().toArray()[0]).getUsers()
+								.keySet().isEmpty()) {
+							Sender.sendMessage("Esta protecao nao tem usuarios");
+						} else {
+							Sender.sendMessage(((ProtectionZone) PVP.PlayerSelectedZone
+									.get(Sender).keySet().toArray()[0])
+									.getOwner() + " : Owner");
+							for (String User : ((ProtectionZone) PVP.PlayerSelectedZone
+									.get(Sender).keySet().toArray()[0])
+									.getUsers().keySet()) {
+								String UserHas = ((ProtectionZone) PVP.PlayerSelectedZone
+										.get(Sender).keySet().toArray()[0])
+										.getUsers().get(User).toString()
+										.split("\\[")[1].split("\\]")[0];
+								Sender.sendMessage(User + " : " + UserHas);
+							}
+						}
+					}
+				} else {
+					Sender.sendMessage("Voce nao selecionou uma protecao, ou voce nao tem permissao nesta, para selecionar, clique direito com um graveto normal dentro de um terreno protegido");
+					return true;
+				}
+			} else if (Args.length > 0) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("delAmigo")
+				|| Cmd.getName().equalsIgnoreCase("removeUsers")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.Users")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 2) {
+				String Target;
+				if (Args[0].equalsIgnoreCase("*")) {
+					Target = "*";
+				} else if (Bukkit.getPlayer(Args[0]) != null) {
+					Target = Bukkit.getPlayer(Args[0]).getName();
+				} else {
+					Sender.sendMessage("Jogador nao encontrado ou nao esta online.");
+					return true;
+				}
+				UserType UT = Util.parseUserType(Args[1]);
+				if (UT == null && !Args[1].equalsIgnoreCase("*")) {
+					for (UserType UType : Types) {
+						Sender.sendMessage(UType.getName() + " : "
+								+ UType.getDesc());
+					}
+					Sender.sendMessage("Isso nao eh um tipo valido");
+					return true;
+				}
+				if (PVP.PlayerSelectedZone.containsKey(Sender)) {
+					if (((ProtectionZone) PVP.PlayerSelectedZone.get(Sender)
+							.keySet().toArray()[0])
+							.userHasAdminType(((Player) Sender).getName())
+							|| Sender
+									.hasPermission("BukkitProtect.Protection.EditOthers")) {
+						if (((ProtectionZone) PVP.PlayerSelectedZone
+								.get(Sender).keySet().toArray()[0])
+								.removeUsers(Target, UT)) {
+							Sender.sendMessage("Removido " + Target
+									+ " da protecao como " + Args[1]);
+						} else {
+							Sender.sendMessage("Nao pode remover " + Target
+									+ " da protecao como " + Args[1]);
+						}
+					}
+				} else {
+					Sender.sendMessage("Voce nao selecionou uma protecao, ou voce nao tem permissao nesta, para selecionar, clique direito com um graveto normal dentro de um terreno protegido");
+					return true;
+				}
+			} else if (Args.length > 2) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("removetag")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.Tag")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 1) {
+				if (!Util.isTag(Args[0])) {
+					for (UserType UType : Types) {
+						Sender.sendMessage(UType.getName() + " : "
+								+ UType.getDesc());
+					}
+					Sender.sendMessage("Isto nao eh um tag valida");
+					return true;
+				}
+				if (PVP.PlayerSelectedZone.containsKey(Sender)) {
+					if (((ProtectionZone) PVP.PlayerSelectedZone.get(Sender)
+							.keySet().toArray()[0])
+							.userHasAdminType(((Player) Sender).getName())
+							|| Sender
+									.hasPermission("BukkitProtect.Protection.EditOthers")) {
+						if (((ProtectionZone) PVP.PlayerSelectedZone
+								.get(Sender).keySet().toArray()[0])
+								.removeTags(Args[0].toLowerCase())) {
+							Sender.sendMessage("Removido " + Args[0]
+									+ " da protecao");
+						} else {
+							Sender.sendMessage("Nao pode remover " + Args[0]
+									+ " da protecao");
+						}
+					}
+				} else {
+					Sender.sendMessage("Voce nao selecionou uma protecao, ou voce nao tem permissao nesta, para selecionar, clique direito com um graveto normal dentro de um terreno protegido");
+					return true;
+				}
+			} else if (Args.length > 1) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("removeprotection")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender
+					.hasPermission("BukkitProtect.Commands.RemoveProtections")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 0) {
+				if (PVP.PlayerSelectedZone.containsKey(Sender)) {
+					if (((ProtectionZone) PVP.PlayerSelectedZone.get(Sender)
+							.keySet().toArray()[0]).getOwner()
+							.equalsIgnoreCase(Sender.getName())
+							|| Sender
+									.hasPermission("BukkitProtect.Protection.RemoveOthers")) {
+						if (PVP.CommandTimers.containsKey(Sender)) {
+							ArrayList<ProtectionZone> Zones = Protections
+									.get(((ProtectionZone) PVP.PlayerSelectedZone
+											.get(Sender).keySet().toArray()[0])
+											.getOwner());
+							Zones.remove((PVP.PlayerSelectedZone.get(Sender)
+									.keySet().toArray()[0]));
+							Protections.put(
+									((ProtectionZone) PVP.PlayerSelectedZone
+											.get(Sender).keySet().toArray()[0])
+											.getOwner(), Zones);
+							PVP.CommandTimers.put((Player) Sender, -1);
+							PVP.updateFakeBlocks((Player) Sender);
+							Sender.sendMessage("Removido a protecao");
+							return true;
+						} else {
+							PVP.CommandTimers.put((Player) Sender, 10);
+							Sender.sendMessage("Escreva o comando novamente dentro de 10 segundos para confirmar!");
+							return true;
+						}
+					}
+				} else {
+					Sender.sendMessage("Voce nao selecionou uma protecao, ou voce nao tem permissao nesta, para selecionar, clique direito com um graveto normal dentro de um terreno protegido");
+					return true;
+				}
+			} else if (Args.length > 0) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("removeallprotections")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender
+					.hasPermission("BukkitProtect.Commands.RemoveProtections")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 0) {
+				if (PVP.CommandTimers.containsKey(Sender)) {
+					Protections.remove(Sender.getName());
+					PVP.updateFakeBlocks((Player) Sender);
+					PVP.CommandTimers.put((Player) Sender, -1);
+					Sender.sendMessage("Removed all your protections");
+					return true;
+				} else {
+					PVP.CommandTimers.put((Player) Sender, 10);
+					Sender.sendMessage("Escreva o comando novamente dentro de 10 segundos para confirmar!");
+					return true;
+				}
+			} else if (Args.length == 1) {
+				Player Target = Bukkit.getPlayer(Args[0]);
+				if (Target == null) {
+					Sender.sendMessage("Jogador nao encontrado ou nao esta online.");
+					return true;
+				}
+				if (PVP.CommandTimers.containsKey(Sender)) {
+					Protections.remove(Target.getName());
+					PVP.updateFakeBlocks((Player) Sender);
+					PVP.CommandTimers.put((Player) Sender, -1);
+					Sender.sendMessage("Removido todas protecoes de "
+							+ Target.getDisplayName() + ".");
+					return true;
+				} else {
+					PVP.CommandTimers.put((Player) Sender, 10);
+					Sender.sendMessage("Escreva o comando novamente dentro de 10 segundos para confirmar!");
+					return true;
+				}
+			} else if (Args.length > 1) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("giveland")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.AdminLand")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 2) {
+				Player Target = (Bukkit.getPlayer(Args[0]));
+				if (Target == null) {
+					Sender.sendMessage("Jogador nao encontrado ou nao esta online.");
+					return true;
+				}
+				int Num = 0;
+				try {
+					Num = Integer.parseInt(Args[1]);
+				} catch (Exception e) {
+					Sender.sendMessage("O segundo argumento precisa ser um número inteiro");
+					return true;
+				}
+				if (Num != 0) {
+					if (LandOwned.containsKey(Target.getName())) {
+						if (LandOwned.get(Target.getName()).intValue() + Num < 0) {
+							LandOwned.put(Target.getName(), 0);
+							Sender.sendMessage("Set "
+									+ Target.getDisplayName()
+									+ "'s land to 0 because the integer you specified was more then the land they owned");
+						} else {
+							LandOwned.put(Target.getName(),
+									LandOwned.get(Target.getName()).intValue()
+											+ Num);
+							Sender.sendMessage("Gave "
+									+ Target.getDisplayName() + " " + Num
+									+ " land");
+						}
+					}
+				}
+			} else if (Args.length > 2) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("stuck")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.Stuck")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 0) {
+				ProtectionZone Zone = isInsideProtection(((Player) Sender)
+						.getLocation());
+				if (Zone != null) {
+					if (Zone.userHasType(Sender.getName(), UTBuildBlocks)) {
+						Sender.sendMessage("Voce pode construir e quebrar blocos para sair desta protecao");
+					} else {
+						((Player) Sender).teleport(((Player) Sender).getWorld()
+								.getHighestBlockAt(Zone.getCube().getCorner1())
+								.getLocation());
+						Sender.sendMessage("Teleportado voce fora da protecao");
+					}
+				}
+			} else if (Args.length > 0) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("setland")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (!Sender.hasPermission("BukkitProtect.Commands.AdminLand")) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			}
+			if (Args.length == 2) {
+				Player Target = (Bukkit.getPlayer(Args[0]));
+				if (Target == null) {
+					Sender.sendMessage("Jogador nao encontrado ou nao esta online.");
+					return true;
+				}
+				int Num = 0;
+				try {
+					Num = Integer.parseInt(Args[1]);
+				} catch (Exception e) {
+					Sender.sendMessage("O segundo argumento precisa ser um número inteiro");
+					return true;
+				}
+				if (Num > 0) {
+					if (LandOwned.containsKey(Target.getName())) {
+						LandOwned.put(Target.getName(), Num);
+						Sender.sendMessage("Set " + Target.getDisplayName()
+								+ "'s land to " + Num);
+					}
+				} else {
+					Sender.sendMessage("O segundo argumento precisa ser um númerio inteiro maior que 0");
+					return true;
+				}
+			} else if (Args.length > 2) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		} else if (Cmd.getName().equalsIgnoreCase("getland")) {
+			if (!(Sender instanceof Player)) {
+				Sender.sendMessage("Voce precisa ser um jogador para isto");
+				return true;
+			}
+			if (Args.length == 1
+					&& Sender.hasPermission("BukkitProtect.Commands.AdminLand")) {
+				Player Target = (Bukkit.getPlayer(Args[0]));
+				if (Target == null) {
+					Sender.sendMessage("Jogador nao encontrado ou nao esta online.");
+					return true;
+				}
+				if (LandOwned.containsKey(Target.getName())) {
+					if (Protections.containsKey(Target.getName())) {
+						Sender.sendMessage(Target.getName() + " tem "
+								+ LandOwned.get(Target.getName())
+								+ " terreno, dos quais " + getTotalLandUsed(Target)
+								+ " eh usado por o total de "
+								+ Protections.get(Target.getName()).size()
+								+ " protecoes.");
+					} else {
+						Sender.sendMessage(Target.getName()
+								+ " tem "
+								+ LandOwned.get(Target.getName())
+								+ " terreno, dos quais 0 eh usado por o total de 0 procoes.");
+					}
+				}
+			} else if (Args.length == 0
+					&& Sender.hasPermission("BukkitProtect.Commands.GetLand")) {
+				if (LandOwned.containsKey(Sender.getName())) {
+					if (Protections.containsKey(Sender.getName())) {
+						Sender.sendMessage("Voce tem "
+								+ LandOwned.get(Sender.getName())
+								+ " terreno, dos quais "
+								+ getTotalLandUsed((Player) Sender)
+								+ " eh usado por o total de "
+								+ Protections.get(Sender.getName()).size()
+								+ " protecoes.");
+					} else {
+						Sender.sendMessage("Voce tem "
+								+ LandOwned.get(Sender.getName())
+								+ " terreno, dos quais 0 eh usado por o total de 0 procoes.");
+					}
+				}
+			} else if (Args.length == 0 || Args.length == 1) {
+				Sender.sendMessage("Voce nao tem permissao para isto");
+				return true;
+			} else if (Args.length > 1) {
+				Sender.sendMessage("Comando errado - www.piritacraft.com");
+				return false;
+			} else {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public int getTotalLandUsed(Player Plr) {
@@ -394,8 +1176,8 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 				Plr.playSound(EffectsLoc, Sound.ENDERMAN_TELEPORT, 1, 1);
 				infinite = true;
 			} else {
-				Plr.sendMessage("Your " + Rod.getItemMeta().getDisplayName()
-						+ " has broken!");
+				Plr.sendMessage("Seu " + Rod.getItemMeta().getDisplayName()
+						+ " quebrou! Faca outro.");
 				Plr.getInventory().setItemInHand(new ItemStack(Material.STICK));
 				Plr.playEffect(EffectsLoc, Effect.ENDER_SIGNAL, 1);
 				Plr.getWorld().playSound(Plr.getLocation(), Sound.ITEM_BREAK,
@@ -539,11 +1321,11 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 							if ((LandOwned.get(Plr.getName())
 									- getTotalLandUsed(Plr) + oldSize) < newProt
 									.getCube().getSize()) {
-								Plr.sendMessage("You need "
+								Plr.sendMessage("Voce precisa "
 										+ (newProt.getCube().getSize() - (LandOwned
 												.get(Plr.getName())
 												- getTotalLandUsed(Plr) + oldSize))
-										+ " more blocks of land");
+										+ " mais blocos de protecao");
 								PVP.PlayerSelection.remove(Plr);
 								PVP.updateFakeBlocks(Plr);
 								return;
@@ -570,10 +1352,10 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 					for (ProtectionZone Zone : Intersecting) {
 						DisplayProtection(Plr, Zone.getCube().getCorner1());
 					}
-					Plr.sendMessage("The protection intersects another protection");
+					Plr.sendMessage("Este terreno pega outro terreno");
 				}
 			} else {
-				Plr.sendMessage("The protection must be atleast "
+				Plr.sendMessage("A protecao deve ser pelo menos "
 						+ getConfig().getInt("MinimumZoneSize") + " x "
 						+ +getConfig().getInt("MinimumZoneSize"));
 				PVP.PlayerSelection.remove(Plr);
@@ -677,12 +1459,15 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 			Map<ProtectionZone, Integer> SelZone = new HashMap<ProtectionZone, Integer>();
 			SelZone.put(Zone, 60);
 			PVP.PlayerSelectedZone.put(Plr, SelZone);
+			// Plr.sendMessage("Dono: "+Zone.toString());
 		}
 		if (Plr.hasPermission("BukkitProtect.Protection.SelectOthers")) {
 			Map<ProtectionZone, Integer> SelZone = new HashMap<ProtectionZone, Integer>();
 			SelZone.put(Zone, 60);
 			PVP.PlayerSelectedZone.put(Plr, SelZone);
+			// Plr.sendMessage("Dono: "+Zone.getOwner());
 		}
+		Plr.sendMessage("Dono: " + Zone.getOwner());
 
 		Location LocUseL;
 		Location LocUseR;
@@ -966,10 +1751,10 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 						.getItem(Event.getNewSlot()).getItemMeta().getLore() != null
 						&& Event.getPlayer().getInventory()
 								.getItem(Event.getNewSlot()).getItemMeta()
-								.getLore().get(0).equals("Protect your land")) {
+								.getLore().get(0).equals("Protege terrenos")) {
 					Event.getPlayer()
 							.sendMessage(
-									"You have "
+									"Voce tem "
 											+ (LandOwned.get(Event.getPlayer()
 													.getName()) - getTotalLandUsed(Event
 													.getPlayer()))
@@ -987,22 +1772,27 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 		if (Event.getPlayer() == null)
 			return;
 		if (Event.getAction() == Action.LEFT_CLICK_AIR
-				|| Event.getAction() == Action.RIGHT_CLICK_AIR)
+				|| Event.getAction() == Action.RIGHT_CLICK_AIR)			
 			return;
 		if (Event.getClickedBlock().getType() == Material.SOIL
 				&& Event.getAction() == Action.PHYSICAL) {
 			if (!getConfig().getBoolean("PlayersTrampleCrops")) {
 				Event.setCancelled(true);
 			}
+//			Plr.sendMessage("Plantacao"); //teste
 		}
 		ProtectionZone Protection = isInsideProtection(Event.getClickedBlock()
 				.getLocation());
 		UserType requiredPerm = UTUseBlocks;
+		requiredPerm=UTBuildBlocks;
 		if (Event.getClickedBlock() != null) {
+//			Plr.sendMessage("Bloco nao nulo"); //teste
 			if (Event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 				if (Event.getClickedBlock().getState().getData() instanceof Openable) {
 					requiredPerm = UTAccess;
+//					Plr.sendMessage("Porta"); //teste
 				} else if (Event.getClickedBlock().getState().getData() instanceof Lever) {
+//					Plr.sendMessage("Alavanca"); //teste
 					Block Attached = Event.getClickedBlock().getRelative(
 							((Lever) Event.getClickedBlock().getState()
 									.getData()).getAttachedFace());
@@ -1010,6 +1800,7 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 							|| Util.poweringDoor(Attached))
 						requiredPerm = UTAccess;
 				} else if (Event.getClickedBlock().getState().getData() instanceof Button) {
+//					Plr.sendMessage("Botao"); //teste
 					Block Attached = Event.getClickedBlock().getRelative(
 							((Button) Event.getClickedBlock().getState()
 									.getData()).getAttachedFace());
@@ -1019,10 +1810,28 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 				}
 			} else if (Event.getAction() == Action.PHYSICAL) {
 				if (Event.getClickedBlock().getState().getData() instanceof PressurePlate) {
+//					Plr.sendMessage("Placa de pressao"); //teste
 					if (Util.poweringDoor(Event.getClickedBlock())
 							|| Util.poweringDoor(Event.getClickedBlock()
 									.getRelative(BlockFace.DOWN)))
 						requiredPerm = UTAccess;
+				}
+			}
+			//codigo adicionado
+			if (Event.getClickedBlock().getState() instanceof InventoryHolder){
+//				Plr.sendMessage("inventario"); //teste
+				requiredPerm = UTUseBlocks;
+				if (Event.getAction() == Action.RIGHT_CLICK_BLOCK){
+					requiredPerm = UTInv;
+				}
+			}
+			if (Event.getClickedBlock().getState().getType() == Material.ENDER_CHEST
+					|| Event.getClickedBlock().getState().getType() == Material.WORKBENCH
+					|| Event.getClickedBlock().getState().getType() == Material.ITEM_FRAME
+					|| Event.getClickedBlock().getState().getType() == Material.ANVIL){
+				requiredPerm = UTUseBlocks;
+				if (Event.getAction() == Action.RIGHT_CLICK_BLOCK){
+					requiredPerm = UTInv;
 				}
 			}
 		}
@@ -1031,12 +1840,14 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 						UTUseBlocks)
 				|| Protection.userHasType(Event.getPlayer().getName(),
 						requiredPerm)) {
+//			Plr.sendMessage("Sem protecao?"); //teste
 			if (Event.getAction() == Action.RIGHT_CLICK_BLOCK)
 				if (Event.getPlayer().getItemInHand().getType() != Material.AIR
 						&& Event.getPlayer().isSneaking()) {
-
+//					Plr.sendMessage("Nao eh ar?"); //teste
 				} else if (Event.getClickedBlock() != null) {
 					if (getConfig().getBoolean("RightClickIronDoor")) {
+//						Plr.sendMessage("Porta de ferro"); //teste
 						if (Event.getClickedBlock().getType() == Material.IRON_DOOR_BLOCK) {
 							if (Event.getClickedBlock()
 									.getRelative(BlockFace.DOWN).getType() == Material.IRON_DOOR_BLOCK) {
@@ -1088,68 +1899,10 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 				}
 			if (Event.hasBlock()) {
 				if (Event.getItem() != null) {
+//					Plr.sendMessage("bloco + item"); //teste
 					if (Event.getAction() == Action.RIGHT_CLICK_BLOCK
 							&& Event.getPlayer().hasPermission(
 									"BukkitProtect.Protection.MakeProtections")) {
-						try {
-							Bukkit.getServer()
-									.getScheduler()
-									.scheduleSyncDelayedTask(this,
-											new Runnable() {
-												@Override
-												public void run() {
-													ItemStack Rod = Event
-															.getPlayer()
-															.getInventory()
-															.getItemInHand();
-													if (RodTypes.contains(Rod
-															.getType())) {
-														if (Rod.getItemMeta()
-																.getLore() != null
-																&& Rod.getItemMeta()
-																		.getLore()
-																		.get(0)
-																		.equals("Protect your land")) {
-															if (Event
-																	.getPlayer()
-																	.isSneaking()) {
-																if (Rod.getAmount() > 1) {
-																	Event.getPlayer()
-																			.sendMessage(
-																					"You must not have more then one "
-																							+ Rod.getItemMeta()
-																									.getDisplayName()
-																							+ " in a stack");
-																	return;
-																}
-																CornerRod(
-																		Event.getPlayer(),
-																		Event.getClickedBlock()
-																				.getLocation(),
-																		Rod);
-															}
-														} else if (Rod
-																.getItemMeta()
-																.getLore() == null) {
-															DisplayProtection(
-																	Event.getPlayer(),
-																	Event.getClickedBlock()
-																			.getLocation());
-														}
-													}
-												}
-											}, 2);
-						} catch (Exception e) {
-						}
-					}
-				}
-			}
-		} else if (!Protection.userHasType(Event.getPlayer().getName(),
-				requiredPerm)) {
-			Event.setUseItemInHand(Result.ALLOW);
-			if (Event.hasBlock()) {
-				if (Event.getItem() != null) {
-					try {
 						Bukkit.getServer().getScheduler()
 								.scheduleSyncDelayedTask(this, new Runnable() {
 									@Override
@@ -1157,7 +1910,30 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 										ItemStack Rod = Event.getPlayer()
 												.getInventory().getItemInHand();
 										if (RodTypes.contains(Rod.getType())) {
-											if (Rod.getItemMeta().getLore() == null) {
+											if (Rod.getItemMeta().getLore() != null
+													&& Rod.getItemMeta()
+															.getLore()
+															.get(0)
+															.equals("Protege terrenos")) {
+												if (Event.getPlayer()
+														.isSneaking()) {
+													if (Rod.getAmount() > 1) {
+														Event.getPlayer()
+																.sendMessage(
+																		"Voce nao precisa ter mais de um "
+																				+ Rod.getItemMeta()
+																						.getDisplayName()
+																				+ " empilhado");
+														return;
+													}
+													CornerRod(
+															Event.getPlayer(),
+															Event.getClickedBlock()
+																	.getLocation(),
+															Rod);
+												}
+											} else if (Rod.getItemMeta()
+													.getLore() == null) {
 												DisplayProtection(Event
 														.getPlayer(), Event
 														.getClickedBlock()
@@ -1166,19 +1942,44 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 										}
 									}
 								}, 2);
-					} catch (Exception e) {
 					}
+				}
+			}
+		} else if (!Protection.userHasType(Event.getPlayer().getName(),
+				requiredPerm)) {
+//			Plr.sendMessage("Nao tem perm"); //teste
+			Event.setUseItemInHand(Result.ALLOW);
+			if (Event.hasBlock()) {
+				if (Event.getItem() != null) {
+					Bukkit.getServer().getScheduler()
+							.scheduleSyncDelayedTask(this, new Runnable() {
+								@Override
+								public void run() {
+									ItemStack Rod = Event.getPlayer()
+											.getInventory().getItemInHand();
+									if (RodTypes.contains(Rod.getType())) {
+										if (Rod.getItemMeta().getLore() == null) {
+											DisplayProtection(
+													Event.getPlayer(), Event
+															.getClickedBlock()
+															.getLocation());
+										}
+									}
+								}
+							}, 2);
 					if (Event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 						List<Integer> ItemsIDs = getConfig().getIntegerList(
 								"BlockedItems");
 						for (int ID : ItemsIDs) {
 							if (Event.getItem().getType().getId() == ID)
 								Event.setUseItemInHand(Result.DENY);
+//							Plr.sendMessage("Item bloqueado"); //teste
 						}
 					}
 				}
 			}
 			Event.setUseInteractedBlock(Result.DENY);
+//			Plr.sendMessage("Evento negado"); //teste
 		}
 	}
 
@@ -1227,8 +2028,8 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 		ProtectionZone Protection = isInsideProtection(Event.getBlock()
 				.getLocation());
 		if (Protection == null
-				|| Protection.userHasType(Event.getPlayer().getName(),
-						UTBuildBlocks))
+				|| Protection.userHasType(Event.getPlayer().getName(), UTBuildBlocks)
+				|| Protection.userHasType(Event.getPlayer().getName(), UTUseBlocks))
 			return;
 		Event.setCancelled(true);
 		Event.getPlayer().updateInventory();
@@ -1241,8 +2042,8 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 		ProtectionZone Protection = isInsideProtection(Event.getBlock()
 				.getLocation());
 		if (Protection == null
-				|| Protection.userHasType(Event.getPlayer().getName(),
-						UTBuildBlocks))
+				|| Protection.userHasType(Event.getPlayer().getName(), UTBuildBlocks)
+				|| Protection.userHasType(Event.getPlayer().getName(), UTUseBlocks))
 			return;
 		Event.setCancelled(true);
 		Event.getPlayer().updateInventory();
@@ -1254,9 +2055,9 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 			return;
 		ProtectionZone Protection = isInsideProtection(Event.getBlock()
 				.getLocation());
-		if (Protection == null
-				|| Protection.userHasType(Event.getPlayer().getName(),
-						UTBuildBlocks)) {
+		if (Protection == null	||
+				Protection.userHasType(Event.getPlayer().getName(), UTBuildBlocks) ||
+				Protection.userHasType(Event.getPlayer().getName(), UTUseBlocks)) {
 			if (getConfig().getBoolean("ProtectChests"))
 				if (Event.getBlock().getType() == Material.CHEST) {
 					if (!Protections.containsKey(Event.getPlayer().getName())
@@ -1456,9 +2257,14 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 								UTEntities))
 					return;
 			} else if (Event.getEntity() instanceof Wolf) {
-				if (PVP.isPlayerInPVPWith(Attacker,
-						(Player) ((Wolf) Event.getEntity()).getOwner()))
-					return;
+				Object Owner = ((Wolf) Event.getEntity()).getOwner();
+				if (Owner instanceof Player)
+					if (PVP.isPlayerInPVPWith(Attacker, (Player) Owner))
+						return;
+				if (Owner instanceof OfflinePlayer)
+					if (PVP.isPlayerInPVPWith(Attacker,
+							((OfflinePlayer) Owner).getPlayer()))
+						return;
 			}
 		} else {
 			if (!(Event.getEntity() instanceof Player)) {
@@ -1473,9 +2279,9 @@ public class BukkitProtect extends JavaPlugin implements Listener {
 		if (Event.getEntity() instanceof Player) {
 			if (PVP.isPlayerInPVPWith((Player) Event.getEntity(), Attacker))
 				return;
-			if (!getOverridingTag("PVP", Event.getEntity().getLocation())
+			if (!getOverridingTag("PVPOff", Event.getEntity().getLocation())
 					.equalsIgnoreCase("true")
-					&& !getOverridingTag("PVP", Attacker.getLocation())
+					&& !getOverridingTag("PVPOff", Attacker.getLocation())
 							.equalsIgnoreCase("true"))
 				return;
 		}

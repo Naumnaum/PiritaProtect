@@ -1,14 +1,10 @@
 package io.github.elitejynx.BukkitProtect;
 
-import io.github.elitejynx.BukkitProtect.Commands.CommandRequest;
-import io.github.elitejynx.BukkitProtect.Protections.ProtectionZone;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -21,9 +17,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
@@ -36,10 +29,6 @@ public class TimerHandlers implements Listener {
 	public Map<Player, Map<Location, Integer>> PlayerSelection = new HashMap<Player, Map<Location, Integer>>();
 	public Map<Player, Map<ProtectionZone, Integer>> PlayerSelectedZone = new HashMap<Player, Map<ProtectionZone, Integer>>();
 	public Map<Player, Integer> PlayerGain = new HashMap<Player, Integer>();
-	public Map<Player, Integer> playerLastChat = new HashMap<Player, Integer>();
-	public Map<Player, String> playerLastChatMessage = new HashMap<Player, String>();
-	public Map<Player, Integer> playerSpam = new HashMap<Player, Integer>();
-	public Map<String, Long> loginSpam = new HashMap<String, Long>();
 
 	public void updateFakeBlocks(Player Plr) {
 		if (UpdateBlock.containsKey(Plr)) {
@@ -76,9 +65,9 @@ public class TimerHandlers implements Listener {
 								.getInt("LandGain"));
 					}
 					if (main.getConfig().getBoolean("SendMessage"))
-						Plr.sendMessage("You have gained "
+						Plr.sendMessage("Você ganhou "
 								+ main.getConfig().getInt("LandGain")
-								+ " blocks of land");
+								+ " blocks de proteger terrenos");
 				}
 			} else {
 				PlayerGain.put(Plr, main.getConfig().getInt("LandDelay"));
@@ -87,17 +76,17 @@ public class TimerHandlers implements Listener {
 				PVPLogs.get(Plr).changeTimer(-1);
 				if (PVPLogs.get(Plr).getTimer() <= 0) {
 					PVPLogs.remove(Plr);
-					Plr.sendMessage("You are no longer in PVP");
+					Plr.sendMessage("Você não esta mais em PVP");
 				}
 			}
 			if (CommandTimers.containsKey(Plr)) {
 				CommandTimers.put(Plr, CommandTimers.get(Plr).intValue() - 1);
 				if (CommandTimers.get(Plr).intValue() <= 0) {
 					if (CommandTimers.get(Plr).intValue() == 0)
-						Plr.sendMessage("Your command has timed out");
+						Plr.sendMessage("Seu comando expirou");
 					if (CommandTrades.containsKey(Plr)) {
 						CommandTrades.get(Plr).getSender()
-								.sendMessage("The request has timed out");
+								.sendMessage("O pedido excedeu o tempo limite");
 						CommandTrades.remove(Plr);
 					}
 					CommandTimers.remove(Plr);
@@ -179,127 +168,6 @@ public class TimerHandlers implements Listener {
 		return false;
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
-	public void PlayerLogin(PlayerLoginEvent event) {
-		if (loginSpam.containsKey(event.getAddress().getHostAddress())) {
-			if ((System.currentTimeMillis() - loginSpam.get(event.getAddress()
-					.getHostAddress())) <= BukkitProtect.Plugin.getConfig()
-					.getDouble("LimitLogins")) {
-				event.disallow(Result.KICK_OTHER,
-						"You have been kicked for joining more then once in a short period of time");
-				loginSpam.put(event.getAddress().getHostAddress(),
-						System.currentTimeMillis());
-			} else {
-				loginSpam.remove(event.getAddress().getHostAddress());
-			}
-		} else {
-			loginSpam.put(event.getAddress().getHostAddress(),
-					System.currentTimeMillis());
-		}
-	}
-
-	@EventHandler(priority = EventPriority.LOWEST)
-	public void PlayerChat(AsyncPlayerChatEvent event) {
-		Player player = event.getPlayer();
-		String message = event.getMessage();
-		double totalCensored = 0;
-		int length = message.length();
-		String[] words = message.split(" ");
-		for (String word : words) {
-			if (word.length() >= BukkitProtect.Plugin.getConfig().getDouble(
-					"MaxWordLength")) {
-				totalCensored = totalCensored + word.length();
-				message = message.replaceFirst(word, "****");
-			} else {
-				double caps = 0;
-				int repeated = 1;
-				char charac = ' ';
-				for (char chara : word.toCharArray()) {
-					if (Character.isLetter(chara)
-							&& Character.isUpperCase(chara)) {
-						caps += 1;
-					}
-					if (chara == charac) {
-						repeated += 1;
-						if (repeated > BukkitProtect.Plugin.getConfig()
-								.getDouble("LetterDragging")) {
-							totalCensored = totalCensored + word.length();
-							message = message.replaceFirst(word, "****");
-						}
-					} else {
-						charac = chara;
-						repeated = 1;
-					}
-					int percent = (int) Math
-							.round((caps / word.length()) * 100);
-					if (percent >= BukkitProtect.Plugin.getConfig().getDouble(
-							"CapsPercentage")
-							&& word.length() != 1) {
-						message = message
-								.replaceFirst(word, word.toLowerCase());
-					}
-				}
-			}
-		}
-		words = message.split(" ");
-		for (String word : BukkitProtect.Plugin.getConfig().getStringList(
-				"BannedWords")) {
-			for (String worda : words) {
-				if (worda.toLowerCase().contains(word.toLowerCase())) {
-					totalCensored = totalCensored + worda.length();
-					message = message.replaceFirst(worda, "****");
-				}
-			}
-		}
-		int percent = (int) Math.round((totalCensored / length) * 100);
-		if (percent >= BukkitProtect.Plugin.getConfig()
-				.getDouble("CensorLimit"))
-			event.setCancelled(true);
-		event.setMessage(message);
-		int time = (int) System.currentTimeMillis();
-		if (playerLastChat.containsKey(player)
-				&& playerLastChatMessage.containsKey(player)) {
-			int lastChat = playerLastChat.get(player);
-			String lastMessage = playerLastChatMessage.get(player);
-			playerLastChat.put(player, time);
-			playerLastChatMessage.put(player, message);
-			double chatTime = (time - lastChat) / 1000;
-			if (!playerSpam.containsKey(player)) {
-				playerSpam.put(player, 0);
-				return;
-			}
-			if (lastMessage.equalsIgnoreCase(message)) {
-				event.getPlayer().sendMessage(
-						ChatColor.RED + "Do not repeat yourself");
-				event.setCancelled(true);
-			} else if (chatTime >= BukkitProtect.Plugin.getConfig().getDouble(
-					"ChatSpam")) {
-				int spam = playerSpam.get(player);
-				playerSpam.put(player, spam - 1);
-				return;
-			} else {
-				if (playerSpam.get(player) >= 2)
-					event.setCancelled(true);
-			}
-			int spam = playerSpam.get(player);
-			playerSpam.put(player, spam + 1);
-			if (spam == 2)
-				player.sendMessage(ChatColor.GOLD + "Do not spam");
-			else if (spam == 5)
-				player.sendMessage(ChatColor.GOLD + "Last warning");
-			else if (spam == 10) {
-				player.kickPlayer("Do not spam!");
-				BukkitProtect.Plugin.getServer().broadcastMessage(
-						player.getDisplayName() + ChatColor.RED
-								+ " has been kicked for spamming!");
-				event.setCancelled(true);
-			}
-		} else {
-			playerLastChat.put(player, time);
-			playerLastChatMessage.put(player, message);
-		}
-	}
-
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void PlayerDied(EntityDeathEvent Event) {
 		if (Event.getEntity() == null)
@@ -314,7 +182,7 @@ public class TimerHandlers implements Listener {
 						PVPlog.removePlrs((Player) Event.getEntity());
 						if (PVPlog.getPlrs().isEmpty()) {
 							PVPLogs.remove(plr);
-							plr.sendMessage("You are no longer in PVP");
+							plr.sendMessage("Você não esta mais em PVP");
 						} else {
 							PVPLogs.put(plr, PVPlog);
 						}
@@ -334,7 +202,7 @@ public class TimerHandlers implements Listener {
 		if (Event.getCause() == TeleportCause.PLUGIN) {
 			if (isPlayerInPVP(Event.getPlayer())) {
 				Event.setCancelled(true);
-				Event.getPlayer().sendMessage("You cannot teleport in PVP");
+				Event.getPlayer().sendMessage("Você não pode teleportar em PVP");
 			}
 		}
 	}
@@ -379,23 +247,23 @@ public class TimerHandlers implements Listener {
 			}
 		if (Attacker == null)
 			return;
-		PVPLog AttLog = new PVPLog(new ArrayList<Player>(), 120);
-		PVPLog DefLog = new PVPLog(new ArrayList<Player>(), 120);
+		PVPLog AttLog = new PVPLog(new ArrayList<Player>(), 10);
+		PVPLog DefLog = new PVPLog(new ArrayList<Player>(), 10);
 		if (!PVPLogs.containsKey(Attacker)) {
-			Attacker.sendMessage("You have entered PVP");
+			Attacker.sendMessage("Você entrou em PVP");
 		} else {
 			AttLog = PVPLogs.get(Attacker);
 		}
 		AttLog.addPlrs((Player) Event.getEntity());
-		AttLog.setTimer(120);
+		AttLog.setTimer(10);
 
 		if (!PVPLogs.containsKey(Event.getEntity())) {
-			((Player) Event.getEntity()).sendMessage("You have entered PVP");
+			((Player) Event.getEntity()).sendMessage("Você entrou em PVP");
 		} else {
 			DefLog = PVPLogs.get(Event.getEntity());
 		}
 		DefLog.addPlrs(Attacker);
-		DefLog.setTimer(120);
+		DefLog.setTimer(10);
 
 		PVPLogs.put(Attacker, AttLog);
 		PVPLogs.put((Player) Event.getEntity(), DefLog);
