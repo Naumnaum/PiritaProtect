@@ -650,7 +650,6 @@ public class UpdateHandler {
 
 	private class UpdateRunnable implements Runnable {
 
-		@Override
 		public void run() {
 			if (UpdateHandler.this.url != null) {
 				// Obtain the results of the project's file feed

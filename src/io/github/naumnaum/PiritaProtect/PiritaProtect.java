@@ -92,31 +92,34 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 	public ArrayList<Tag> Tags = new ArrayList<Tag>();
 	public ArrayList<UserType> Types = new ArrayList<UserType>();
 
-	//modificado por Naumnaum
+	// modificado por Naumnaum
 	public UserType UTAccess = new UserType("Portas",
 			" - Permite o jogador abrir portas, botoes, placas de pressao.",
 			Material.STAINED_CLAY, 8, Material.STAINED_CLAY, 0, 1, false);
-	//modificado por Naumnaum
+	// modificado por Naumnaum
 	public UserType UTEntities = new UserType("Entidades",
-			" - Permite o jogador usar ENTIDADES como ANIMAIS, carrinhos.", Material.STAINED_CLAY, 7,
-			Material.STAINED_CLAY, 12, 2, false);
-	//modificado por Naumnaum
-	public UserType UTBuildBlocks = new UserType("Construir",
-			" - Permite o jogador colocar e quebrar blocos do terreno, mas nao permite quebrar nem acessar blocos que abram inventario, como baús, fornos, etc.", Material.STAINED_CLAY, 13,
-			Material.STAINED_CLAY, 5, 3, false);
-	//modificado por Naumnaum
-	public UserType UTUseBlocks = new UserType("Total",
-			" - Da permissao para colocar ou tirar todos blocos, acessar todos objetos.", Material.STAINED_CLAY, 11,
-			Material.STAINED_CLAY, 3, 3, false);
-	//modificado por Naumnaum
-	public UserType UTModerator = new UserType("Moderador",
-			" - Permite o jogador a usar comandos de DONO do terreno em seu terreno!", Material.STAINED_CLAY, 1,
-			Material.STAINED_CLAY, 4, 5, true);
-	//Adicionado por Naumnaum
+			" - Permite o jogador usar ENTIDADES como ANIMAIS, carrinhos.",
+			Material.STAINED_CLAY, 7, Material.STAINED_CLAY, 12, 2, false);
+	// modificado por Naumnaum
+	public UserType UTBuildBlocks = new UserType(
+			"Construir",
+			" - Permite o jogador colocar e quebrar blocos do terreno, mas nao permite quebrar nem acessar blocos que abram inventario, como baús, fornos, etc.",
+			Material.STAINED_CLAY, 13, Material.STAINED_CLAY, 5, 3, false);
+	// modificado por Naumnaum
+	public UserType UTUseBlocks = new UserType(
+			"Total",
+			" - Da permissao para colocar ou tirar todos blocos, acessar todos objetos.",
+			Material.STAINED_CLAY, 11, Material.STAINED_CLAY, 3, 3, false);
+	// modificado por Naumnaum
+	public UserType UTModerator = new UserType(
+			"Moderador",
+			" - Permite o jogador a usar comandos de DONO do terreno em seu terreno!",
+			Material.STAINED_CLAY, 1, Material.STAINED_CLAY, 4, 5, true);
+	// Adicionado por Naumnaum
 	public UserType UTInv = new UserType("Baus",
-			" - Permite usar inventarios como BAUS, fornos, etc...", Material.STAINED_GLASS, 11,
-			Material.STAINED_GLASS, 3, 3, false);
-	
+			" - Permite usar inventarios como BAUS, fornos, etc...",
+			Material.STAINED_GLASS, 11, Material.STAINED_GLASS, 3, 3, false);
+
 	public ArrayList<Material> RodTypes = new ArrayList<Material>();
 
 	public ItemStack RodA;
@@ -185,7 +188,7 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 		addUserType(UTBuildBlocks);
 		addUserType(UTUseBlocks);
 		addUserType(UTModerator);
-		//adcionado por Naumnaum
+		// adcionado por Naumnaum
 		addUserType(UTInv);
 		ProtectionPath = getDataFolder() + File.separator + "Protections.yml";
 		File FileP = new File(ProtectionPath);
@@ -568,7 +571,8 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 									+ " a permissao " + Args[1]);
 						} else {
 							Sender.sendMessage("Nao pode adicionar " + Target
-									+ " a permissao " + Args[1] + " ou, ele ja tem esta permissao!");
+									+ " a permissao " + Args[1]
+									+ " ou, ele ja tem esta permissao!");
 						}
 					}
 				} else {
@@ -1037,7 +1041,8 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 					if (Protections.containsKey(Target.getName())) {
 						Sender.sendMessage(Target.getName() + " tem "
 								+ LandOwned.get(Target.getName())
-								+ " terreno, dos quais " + getTotalLandUsed(Target)
+								+ " terreno, dos quais "
+								+ getTotalLandUsed(Target)
 								+ " eh usado por o total de "
 								+ Protections.get(Target.getName()).size()
 								+ " protecoes.");
@@ -1772,30 +1777,30 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 		if (Event.getPlayer() == null)
 			return;
 		if (Event.getAction() == Action.LEFT_CLICK_AIR
-				|| Event.getAction() == Action.RIGHT_CLICK_AIR)			
+				|| Event.getAction() == Action.RIGHT_CLICK_AIR)
 			return;
 		if (Event.getClickedBlock().getType() == Material.SOIL
 				&& Event.getAction() == Action.PHYSICAL) {
 			if (!getConfig().getBoolean("PlayersTrampleCrops")) {
 				Event.setCancelled(true);
 			}
-//			Plr.sendMessage("Plantacao"); //teste
-		if (Event.getClickedBlock().getType() == Material.SIGN){
-			return;
+			// Plr.sendMessage("Plantacao"); //teste
 		}
+		if (Event.getClickedBlock().getType() == Material.SIGN) {
+			return;
 		}
 		ProtectionZone Protection = isInsideProtection(Event.getClickedBlock()
 				.getLocation());
 		UserType requiredPerm = UTUseBlocks;
-		requiredPerm=UTBuildBlocks;
+		requiredPerm = UTBuildBlocks;
 		if (Event.getClickedBlock() != null) {
-//			Plr.sendMessage("Bloco nao nulo"); //teste
+			// Plr.sendMessage("Bloco nao nulo"); //teste
 			if (Event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 				if (Event.getClickedBlock().getState().getData() instanceof Openable) {
 					requiredPerm = UTAccess;
-//					Plr.sendMessage("Porta"); //teste
+					// Plr.sendMessage("Porta"); //teste
 				} else if (Event.getClickedBlock().getState().getData() instanceof Lever) {
-//					Plr.sendMessage("Alavanca"); //teste
+					// Plr.sendMessage("Alavanca"); //teste
 					Block Attached = Event.getClickedBlock().getRelative(
 							((Lever) Event.getClickedBlock().getState()
 									.getData()).getAttachedFace());
@@ -1803,7 +1808,7 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 							|| Util.poweringDoor(Attached))
 						requiredPerm = UTAccess;
 				} else if (Event.getClickedBlock().getState().getData() instanceof Button) {
-//					Plr.sendMessage("Botao"); //teste
+					// Plr.sendMessage("Botao"); //teste
 					Block Attached = Event.getClickedBlock().getRelative(
 							((Button) Event.getClickedBlock().getState()
 									.getData()).getAttachedFace());
@@ -1813,27 +1818,27 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 				}
 			} else if (Event.getAction() == Action.PHYSICAL) {
 				if (Event.getClickedBlock().getState().getData() instanceof PressurePlate) {
-//					Plr.sendMessage("Placa de pressao"); //teste
+					// Plr.sendMessage("Placa de pressao"); //teste
 					if (Util.poweringDoor(Event.getClickedBlock())
 							|| Util.poweringDoor(Event.getClickedBlock()
 									.getRelative(BlockFace.DOWN)))
 						requiredPerm = UTAccess;
 				}
 			}
-			//codigo adicionado
-			if (Event.getClickedBlock().getState() instanceof InventoryHolder){
-//				Plr.sendMessage("inventario"); //teste
+			// codigo adicionado
+			if (Event.getClickedBlock().getState() instanceof InventoryHolder) {
+				// Plr.sendMessage("inventario"); //teste
 				requiredPerm = UTUseBlocks;
-				if (Event.getAction() == Action.RIGHT_CLICK_BLOCK){
+				if (Event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 					requiredPerm = UTInv;
 				}
 			}
 			if (Event.getClickedBlock().getState().getType() == Material.ENDER_CHEST
 					|| Event.getClickedBlock().getState().getType() == Material.WORKBENCH
 					|| Event.getClickedBlock().getState().getType() == Material.ITEM_FRAME
-					|| Event.getClickedBlock().getState().getType() == Material.ANVIL){
+					|| Event.getClickedBlock().getState().getType() == Material.ANVIL) {
 				requiredPerm = UTUseBlocks;
-				if (Event.getAction() == Action.RIGHT_CLICK_BLOCK){
+				if (Event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 					requiredPerm = UTInv;
 				}
 			}
@@ -1843,14 +1848,14 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 						UTUseBlocks)
 				|| Protection.userHasType(Event.getPlayer().getName(),
 						requiredPerm)) {
-//			Plr.sendMessage("Sem protecao?"); //teste
+			// Plr.sendMessage("Sem protecao?"); //teste
 			if (Event.getAction() == Action.RIGHT_CLICK_BLOCK)
 				if (Event.getPlayer().getItemInHand().getType() != Material.AIR
 						&& Event.getPlayer().isSneaking()) {
-//					Plr.sendMessage("Nao eh ar?"); //teste
+					// Plr.sendMessage("Nao eh ar?"); //teste
 				} else if (Event.getClickedBlock() != null) {
 					if (getConfig().getBoolean("RightClickIronDoor")) {
-//						Plr.sendMessage("Porta de ferro"); //teste
+						// Plr.sendMessage("Porta de ferro"); //teste
 						if (Event.getClickedBlock().getType() == Material.IRON_DOOR_BLOCK) {
 							if (Event.getClickedBlock()
 									.getRelative(BlockFace.DOWN).getType() == Material.IRON_DOOR_BLOCK) {
@@ -1902,13 +1907,12 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 				}
 			if (Event.hasBlock()) {
 				if (Event.getItem() != null) {
-//					Plr.sendMessage("bloco + item"); //teste
+					// Plr.sendMessage("bloco + item"); //teste
 					if (Event.getAction() == Action.RIGHT_CLICK_BLOCK
 							&& Event.getPlayer().hasPermission(
 									"PiritaProtect.Protection.MakeProtections")) {
 						Bukkit.getServer().getScheduler()
 								.scheduleSyncDelayedTask(this, new Runnable() {
-									@Override
 									public void run() {
 										ItemStack Rod = Event.getPlayer()
 												.getInventory().getItemInHand();
@@ -1950,13 +1954,12 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 			}
 		} else if (!Protection.userHasType(Event.getPlayer().getName(),
 				requiredPerm)) {
-//			Plr.sendMessage("Nao tem perm"); //teste
+			// Plr.sendMessage("Nao tem perm"); //teste
 			Event.setUseItemInHand(Result.ALLOW);
 			if (Event.hasBlock()) {
 				if (Event.getItem() != null) {
 					Bukkit.getServer().getScheduler()
 							.scheduleSyncDelayedTask(this, new Runnable() {
-								@Override
 								public void run() {
 									ItemStack Rod = Event.getPlayer()
 											.getInventory().getItemInHand();
@@ -1976,13 +1979,13 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 						for (int ID : ItemsIDs) {
 							if (Event.getItem().getType().getId() == ID)
 								Event.setUseItemInHand(Result.DENY);
-//							Plr.sendMessage("Item bloqueado"); //teste
+							// Plr.sendMessage("Item bloqueado"); //teste
 						}
 					}
 				}
 			}
 			Event.setUseInteractedBlock(Result.DENY);
-//			Plr.sendMessage("Evento negado"); //teste
+			// Plr.sendMessage("Evento negado"); //teste
 		}
 	}
 
@@ -2031,8 +2034,10 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 		ProtectionZone Protection = isInsideProtection(Event.getBlock()
 				.getLocation());
 		if (Protection == null
-				|| Protection.userHasType(Event.getPlayer().getName(), UTBuildBlocks)
-				|| Protection.userHasType(Event.getPlayer().getName(), UTUseBlocks))
+				|| Protection.userHasType(Event.getPlayer().getName(),
+						UTBuildBlocks)
+				|| Protection.userHasType(Event.getPlayer().getName(),
+						UTUseBlocks))
 			return;
 		Event.setCancelled(true);
 		Event.getPlayer().updateInventory();
@@ -2045,8 +2050,10 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 		ProtectionZone Protection = isInsideProtection(Event.getBlock()
 				.getLocation());
 		if (Protection == null
-				|| Protection.userHasType(Event.getPlayer().getName(), UTBuildBlocks)
-				|| Protection.userHasType(Event.getPlayer().getName(), UTUseBlocks))
+				|| Protection.userHasType(Event.getPlayer().getName(),
+						UTBuildBlocks)
+				|| Protection.userHasType(Event.getPlayer().getName(),
+						UTUseBlocks))
 			return;
 		Event.setCancelled(true);
 		Event.getPlayer().updateInventory();
@@ -2058,9 +2065,11 @@ public class PiritaProtect extends JavaPlugin implements Listener {
 			return;
 		ProtectionZone Protection = isInsideProtection(Event.getBlock()
 				.getLocation());
-		if (Protection == null	||
-				Protection.userHasType(Event.getPlayer().getName(), UTBuildBlocks) ||
-				Protection.userHasType(Event.getPlayer().getName(), UTUseBlocks)) {
+		if (Protection == null
+				|| Protection.userHasType(Event.getPlayer().getName(),
+						UTBuildBlocks)
+				|| Protection.userHasType(Event.getPlayer().getName(),
+						UTUseBlocks)) {
 			if (getConfig().getBoolean("ProtectChests"))
 				if (Event.getBlock().getType() == Material.CHEST) {
 					if (!Protections.containsKey(Event.getPlayer().getName())

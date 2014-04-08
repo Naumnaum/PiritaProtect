@@ -43,7 +43,6 @@ public class TimerHandlers implements Listener {
 	public TimerHandlers(final PiritaProtect main) {
 		Bukkit.getServer().getScheduler()
 				.scheduleSyncRepeatingTask(main, new Runnable() {
-					@Override
 					public void run() {
 						UpdatePVP(main);
 					}
