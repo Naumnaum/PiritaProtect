@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/bukkit"/>
+	<classpathentry kind="lib" path="C:/Users/Lemures-HP/.m2/repository/org/avaje/ebean/2.7.3/ebean-2.7.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Lemures-HP/.m2/repository/com/google/guava/guava/10.0/guava-10.0.jar">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="maven.groupId" value="com.google.guava"/>
+			<attribute name="maven.artifactId" value="guava"/>
+			<attribute name="maven.version" value="10.0"/>
+			<attribute name="maven.scope" value="provided"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="output" path="target/classes"/>
+	<classpathentry kind="lib" path="/bukkit/target/bukkit-1.7.2-R0.3-SNAPSHOT.jar" sourcepath="/bukkit/src/main/java"/>
+	<classpathentry kind="output" path="bin"/>
 </classpath>
