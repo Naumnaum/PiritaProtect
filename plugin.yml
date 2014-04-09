@@ -4,62 +4,62 @@ version: 1.0
 description: PiritaProtect, protecting your worlds since it was forked!
 authors: [Naumnaum]
 permissions:
-  BukkitProtect.Protection.*:
+  PiritaProtect.Protection.*:
     description: Gives access to all protection permissions
     children:
-      BukkitProtect.Protection.MakeProtections: true
-      BukkitProtect.Protection.SelectOthers: true
-      BukkitProtect.Protection.RemoveOthers: true
-      BukkitProtect.Protection.EditOthers: true
-  BukkitProtect.Protection.MakeProtections:
+      PiritaProtect.Protection.MakeProtections: true
+      PiritaProtect.Protection.SelectOthers: true
+      PiritaProtect.Protection.RemoveOthers: true
+      PiritaProtect.Protection.EditOthers: true
+  PiritaProtect.Protection.MakeProtections:
     description: Gives player access to selecting others regions
     default: true
-  BukkitProtect.Protection.SelectOthers:
+  PiritaProtect.Protection.SelectOthers:
     description: Gives player access to selecting others regions
     default: op
-  BukkitProtect.Protection.RemoveOthers:
+  PiritaProtect.Protection.RemoveOthers:
     description: Allows player to remove others regions
     default: op
-  BukkitProtect.Protection.EditOthers:
+  PiritaProtect.Protection.EditOthers:
     description: Allows player to edit others regions
     default: op
-  BukkitProtect.Commands.*:
+  PiritaProtect.Commands.*:
     description: Gives access to all command permissions
     children:
-      BukkitProtect.Commands.GiveRod: true
-      BukkitProtect.Commands.Tag: true
-      BukkitProtect.Commands.AdminLand: true
-      BukkitProtect.Commands.GetLand: true
-      BukkitProtect.Commands.Users: true
-      BukkitProtect.Commands.Transfer: true
-      BukkitProtect.Commands.Accept: true
-      BukkitProtect.Commands.RemoveProtections: true
-      BukkitProtect.Commands.Stuck: true
-  BukkitProtect.Commands.GiveRod:
+      PiritaProtect.Commands.GiveRod: true
+      PiritaProtect.Commands.Tag: true
+      PiritaProtect.Commands.AdminLand: true
+      PiritaProtect.Commands.GetLand: true
+      PiritaProtect.Commands.Users: true
+      PiritaProtect.Commands.Transfer: true
+      PiritaProtect.Commands.Accept: true
+      PiritaProtect.Commands.RemoveProtections: true
+      PiritaProtect.Commands.Stuck: true
+  PiritaProtect.Commands.GiveRod:
     description: Give yourself a Rod of the Admin
     default: op
-  BukkitProtect.Commands.Tag:
+  PiritaProtect.Commands.Tag:
     description: Allows players to use the add/removeTag command
     default: op
-  BukkitProtect.Commands.AdminLand:
+  PiritaProtect.Commands.AdminLand:
     description: Allows players to use the land commands
     default: op
-  BukkitProtect.Commands.GetLand:
+  PiritaProtect.Commands.GetLand:
     description: Allows players to use the getland command on their own land
     default: true
-  BukkitProtect.Commands.Users:
+  PiritaProtect.Commands.Users:
     description: Allow players to use the add/remove/getUsers command
     default: true
-  BukkitProtect.Commands.Transfer:
+  PiritaProtect.Commands.Transfer:
     description: Allows players to use the Transfer command
     default: true
-  BukkitProtect.Commands.Accept:
+  PiritaProtect.Commands.Accept:
     description: Allows players to use the accept command
     default: true
-  BukkitProtect.Commands.RemoveProtections:
+  PiritaProtect.Commands.RemoveProtections:
     description: Allows players to use the remove(all)protection(s) commands
     default: true
-  BukkitProtect.Commands.Stuck:
+  PiritaProtect.Commands.Stuck:
     description: Allows players to use the Stuck command
     default: true
 commands:
